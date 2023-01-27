@@ -21,10 +21,11 @@ Packets generally have the following structure:
 |3-byte preamble (always AA AA AA)  |  1-byte Command ID  |  2-byte Size (little endian)  |  N-byte Payload  |  2-byte checksum |
 
 #### Commands Used
-
-Preposition gripper
-grasp part
-release part
-disconnect
-remove error
-get gripper state WIP
+|         Command         | Code | Parameters |
+|-------------------------|------|------------|
+| Preposition Gripper     | 0x21 | <ul><li>B0 - Flag Bits <ul><li>D7..2 Unused (set to 0)</li><li>D1 - Stop on Block: stop (1) or clamp (0) on block</li><li>D0 - Movement Type: relative (1) or absolute to closed fingers (0)</li></ul></li><li>B1..4 - Width (mm)</li><li>B5..8 - Speed (mm/s)</li></ul> |
+| Grasp Part              | 0x25 | <ul><li>B0..3 - Part Width (mm)</li><li>B4..7 - Speed (mm/s)</li></ul> |
+| Release Part            | 0x26 | <ul><li>B0..3 - Open Width (mm)</li><li>B4..7 - Speed (mm/s)</li></ul> |
+| Disconnect Announcement | 0x07 | None |
+| Ack Fault Condition     | 0x24 | B0..2 - Ack key (String containing 'ack' = 0x61 0x63 0x6B) |
+| Get System State (WIP)  | 0x40 | Sent Parameters: <ul><li>B0 - Flag Bits <ul><li>D7..2 Unused (set to 0)</li><li>D1 - Change-Sensitive Update: Update on change (1) or always (0)</li><li>D0 - Automatic Update: enabled (1) or disabled (0)</li></ul></li><li>B1..2 - Period between auto-sent packets (ms)</li></ul>Returned Parameters:<ul><li>B0..3 - Bit Vector (for definition see Command Set Reference Manual Appendix B)</li></ul> |
