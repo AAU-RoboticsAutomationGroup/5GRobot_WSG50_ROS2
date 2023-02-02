@@ -195,6 +195,9 @@ class wsg50():
             data = self.sckt.recv(256) # byte 5-6 are error codes: 10 denied and 1a success
             err_code = struct.unpack('<h', data[6:8])[0]
             print("Grasp reponse from {0}:".format([width, speed]), err_code, ERROR_CODES_WSG[err_code])
+            print(type(err_code))
+            if err_code == 18:
+                break
 
 
     def release_part(self, width, speed):
@@ -282,11 +285,11 @@ def test(wsg_instance):
         wsg_instance (class_instance): declare the wsg50 class and pass the object to this function.
     """
 
-    wsg_instance.preposition_gripper(70, 100)
+    #wsg_instance.preposition_gripper(70, 100)
 
-    wsg_instance.grasp_part(55, 100)
+    #wsg_instance.grasp_part(55, 100)
 
-    time.sleep(5)
+    #time.sleep(5)
 
     wsg_instance.release_part(70, 100)
 
