@@ -17,6 +17,10 @@ import time
 import sys
 import numpy as np
 
+# ROS specific libraries
+import rclpy
+from rclpy.node import Node
+
 #################################### CONSTANTS AND GLOBAL VARIABLES #########################################
 # #inital message with header for later id and payload to be appended
 
@@ -61,9 +65,11 @@ SYSTEM_STATE_FLAGS = ['SF_REFERENCED', 'SF_MOVING', 'SF_BLOCKED_MINUS', 'SF_BLOC
                       'SF_TEMP_FAULT', 'SF_POWER_FAULT', 'SF_CURR_FAULT', 'SF_FINGER_FAULT',
                       'SF_CMD_FAILURE', 'SF_SCRIPT_RUNNING', 'SF_SCRIPT_FAILURE']
 
-class wsg50():
+class wsg50(Node):
 
     def __init__(self, server_ip='192.168.1.21', server_port=1000):
+
+        super().__init__('wsg_submodule')
         
         self.server_ip = server_ip # set the local class ip 
         self.server_port = server_port # set the local class port
@@ -135,7 +141,8 @@ class wsg50():
         while err_code != 0:
             data = self.sckt.recv(256) 
             err_code = struct.unpack('<h', data[6:8])[0]# byte 6-8 are error codes: 0: SUCCESS, 26: PENDING, 4: RUNNING, 10: DENIED
-            print("Homing response: ", err_code, ERROR_CODES_WSG[err_code])
+            #print("Homing response: ", err_code, ERROR_CODES_WSG[err_code]) # this print is not used with ROS
+            self.get_logger().info("Homing response: {0} {1}".format(err_code, ERROR_CODES_WSG[err_code]))
 
     def preposition_gripper(self, width, speed):
         """Preposition the gripper to a set width at a certain speed. \n
@@ -162,7 +169,9 @@ class wsg50():
         while err_code != 0:
             data = self.sckt.recv(256) # byte 5-6 are error codes: 10 denied and 1a success
             err_code = struct.unpack('<h', data[6:8])[0]
-            print("Preposition reponse from {0}:".format([width, speed]), err_code, ERROR_CODES_WSG[err_code])
+            print(err_code)
+            self.get_logger().info("Preposition reponse from {0}: {1} {2}".format([width, speed],err_code, ERROR_CODES_WSG[err_code]))
+            #print("Preposition reponse from {0}:".format([width, speed]), err_code, ERROR_CODES_WSG[err_code])
 
     def grasp_part(self, width, speed):
         """This function is used to grasp a part. \n
@@ -189,7 +198,10 @@ class wsg50():
         while err_code != 0:
             data = self.sckt.recv(256) # byte 5-6 are error codes: 10 denied and 1a success
             err_code = struct.unpack('<h', data[6:8])[0]
-            print("Grasp reponse from {0}:".format([width, speed]), err_code, ERROR_CODES_WSG[err_code])
+            self.get_logger().info("Grasp reponse from {0}: {1} {2}".format([width, speed],err_code, ERROR_CODES_WSG[err_code]))
+
+            if err_code == 18: # if the gripper is failing the grasp continue such that the task can be performed again the message will be reported
+                break
 
     def release_part(self, width, speed):
         """Release a previously grasped part.
@@ -213,9 +225,10 @@ class wsg50():
 
         err_code = None
         while err_code != 0:
-            data = self.sckt.recv(256) # byte 5-6 are error codes: 10 denied and 1a success
-            err_code = struct.unpack('<h', data[6:8])[0]
-            print("Release reponse from {0}:".format([width, speed]), err_code, ERROR_CODES_WSG[err_code])
+            data = self.sckt.recv(256) 
+            err_code = struct.unpack('<h', data[6:8])[0] # byte 6-8 are error codes.
+            self.get_logger().info("Release reponse from {0}: {1} {2}".format([width, speed],err_code, ERROR_CODES_WSG[err_code]))
+
 
     def gripper_state(self):
         """Gets all the present state flags from the gripper.\n
@@ -228,16 +241,20 @@ class wsg50():
         self.sckt.sendall(self.gripper_status)
         self.sckt.setblocking(1)
         data = self.sckt.recv(16)
-        binarized = bin(int(data.hex()[4:10], 16))[2:23] # Take the 21 bits that are allocated to state flags. For more information see: WSG50 Command Set Reference Maunal, Appendix B
 
-        state_mask =  [] # Added mask for the error_states
-        for bit in binarized:
-            state_mask.append(bool(int(bit)))
-        
-        present_state_flags = [SYSTEM_STATE_FLAGS[i] for i in range(len(SYSTEM_STATE_FLAGS)) if state_mask[i]]
-        print(present_state_flags)
+        if data.hex()[4:10] != '':
+            binarized = bin(int(data.hex()[4:10], 16))[2:23] # Take the 21 bits that are allocated to state flags. For more information see: WSG50 Command Set Reference Maunal, Appendix B
 
-        return present_state_flags
+            state_mask =  [] # Added mask for the error_states
+            for bit in binarized:
+                state_mask.append(bool(int(bit)))
+            
+            present_state_flags = [SYSTEM_STATE_FLAGS[i] for i in range(len(SYSTEM_STATE_FLAGS)) if state_mask[i]]
+
+            return present_state_flags
+        else: 
+            self.get_logger().warning("Gripper state could not be received!")
+            return None
         
     def start_connection(self, server_ip='192.168.1.21', server_port=1000):
         """Start a TCP/IP socket connection with a desired IP and port.
