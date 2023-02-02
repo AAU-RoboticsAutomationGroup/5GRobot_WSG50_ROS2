@@ -50,10 +50,10 @@ Then simply build the container and run it.
 
 If the gripper is connected the fingers should move into the home position(open). The ros2 package will log if this is done successfuly or not. The package will create a set of topics that can be used to control the gripper. These can be found in the list below. 
 
-|                 | Description  | Message Type  | Range & units|
+|                 | Description  | Message Type  | Structure & Units|
 |-----------------|-------------|-------------|-------------|
 | /wsg50/connect       | Starts a TCP/IP connection to the WSG50 gripper | std_msgs.msg/Empty|           |
-| /wsg50/disconnect    | Ends a TCP/IP connection to the WSG50 gripper   | std_msgs.msg/Empty    | robotlab    |
+| /wsg50/disconnect    | Ends a TCP/IP connection to the WSG50 gripper   | std_msgs.msg/Empty    | |
 | /wsg50/preposition   | Moves the fingers into position for grasping | interface_wsg.msg/MoveFingers | float64 width [mm], float64 speed [mm/s]|
 | /wsg50/grasp         | Closes the fingers around a part.    | interface_wsg.msg/MoveFingers    | float64 width [mm], float64 speed [mm/s]     |
 | /wsg50/release       | Releases a previously grasped part.       | interface_wsg.msg/MoveFingers       | float64 width [mm], float64 speed [mm/s]      |
