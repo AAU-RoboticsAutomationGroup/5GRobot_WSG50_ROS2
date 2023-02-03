@@ -58,3 +58,17 @@ If the gripper is connected the fingers should move into the home position(open)
 | /wsg50/grasp         | Closes the fingers around a part.    | interface_wsg.msg/MoveFingers    | float64 width [mm], float64 speed [mm/s]     |
 | /wsg50/release       | Releases a previously grasped part.       | interface_wsg.msg/MoveFingers       | float64 width [mm], float64 speed [mm/s]      |
 | /wsg50/gripper_state | Gets the state of the gripper(see Appendix B in the command set reference manual)    | interface_wsg.msg/GripperState    | std_msgs/Header header, string[] state_flags, float64 gripper_width [mm]   |
+
+
+---
+
+## Problems & Solutions
+Solutions to known problems will be posted below for now.
+### docker-compose permission issues
+There are sometimes permission issues with running docker-compose. Run the following commands in a terminal to ensure the permissions are the place:
+
+    $ sudo groupadd docker
+
+    $ sudo usermod -aG docker $USER
+
+    $ newgrp docker
