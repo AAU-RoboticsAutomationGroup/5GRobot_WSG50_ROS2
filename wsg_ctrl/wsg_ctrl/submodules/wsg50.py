@@ -67,7 +67,7 @@ SYSTEM_STATE_FLAGS = ['SF_REFERENCED', 'SF_MOVING', 'SF_BLOCKED_MINUS', 'SF_BLOC
 
 class wsg50(Node):
 
-    def __init__(self, server_ip='192.168.1.21', server_port=1000):
+    def __init__(self, server_ip='192.168.12.21', server_port=1000):
 
         super().__init__('wsg_submodule')
         
